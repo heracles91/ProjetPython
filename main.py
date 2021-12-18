@@ -4,6 +4,33 @@ genre={1:"Homme", 2:"Femme", 3:"Genre non renseigné"}
 age={1:"Moins de 18ans", 2:"Entre 18 et 25ans", 3:"Plus de 25ans"}
 style={1:"Science-Fiction",2:"Biographie",3:"Horreur",4:"Romance",5:"Fable",6:"Histoire",7:"Comedie"}    
 
+def verif_livre(livre:str)->bool:
+    """Cette fonction vérifie la présence d'un livre
+    Le nom du livre en parametre
+    Renvoi True or False"""
+    books=open("books.txt", 'r', encoding="utf-8")
+    book=books.readlines()
+    books.close()
+    verif=False
+    for ligne in book:
+        if ligne[:len(ligne)-1] == livre:
+            verif=True
+    return verif
+
+def verif_lecteur(lecteur:str)->bool:
+    """Cette fonction vérifie la présence d'un lecteur
+    Le pseudo du lecteur en paramètre
+    Renvoi True or False"""
+    readers=open('readers.txt', 'r')
+    reader=readers.readlines()
+    readers.close()
+    verif=False
+    for ligne in reader:
+        test=ligne[:-1].split(',')
+        if test[0]==lecteur:
+            verif=True
+    return verif
+
 def ajouter_lecteur():
     """ajoute un lecteur à nos registre"""
     print("Ajout lecteur")
@@ -11,12 +38,12 @@ def ajouter_lecteur():
 
     genre=int(input("1.HOMME | 2.FEMME | 3.PEU IMPORTE: "))
     #Saisie sécurisée
-    while genre!=1 or genre!=2 or genre!=3:
+    while genre not in [1, 2, 3]:
         genre=int(input("1.HOMME | 2.FEMME | 3.PEU IMPORTE: "))
 
     #Saisie sécurisée
     age=int(input("1.MOINS 18ANS | 2.ENTRE 18-25 | 3.PLUS 25ANS: "))
-    while age!=1 or age!=2 or age!=3:
+    while age not in [1, 2, 3]:
         age=int(input("1.MOINS 18ANS | 2.ENTRE 18-25 | 3.PLUS 25ANS: "))
 
     #J'affiche les différents styles de lecture définis en haut
@@ -43,16 +70,22 @@ def ajouter_lecteur():
     fichier2.write("\n")
     fichier2.close()
 
-    if test>0: #Si test est supérieur à 0 ça veut dire qu'il a lu un livre
-        veut_noter=input("Voulez-vous noter un livre que vous avez lu? Enter 1 pour OUI | 2 pour NON: ")
-        while veut_noter!=1 and veut_noter!=2:
-            veut_noter=input("Veuillez entrer uniquement 1 ou 2: ")
-        if veut_noter==1:
-            noter_livre(matrice, pseudo)
     #j'ajoute un ligne à la matrice
     matrice.append(["" for x in books])
 
-def afficher_livre():
+    if test>0: #Si test est supérieur à 0 ça veut dire qu'il a lu un livre
+        veut_noter=int(input("Voulez-vous noter un livre que vous avez lu? Enter 1 pour OUI | 2 pour NON: "))
+        while veut_noter not in [1, 2]:
+            veut_noter=int(input("Veuillez entrer uniquement 1 ou 2: "))
+        if veut_noter==1:
+            nombre_note=int(input("Combien de livre voulez-vous noter: "))
+            while nombre_note<1 or nombre_note>test:
+                print("Veuillez entrer un chiffre entre 1 et", test, end=": ")
+                nombre_note=int(input())
+            for i in range(nombre_note):
+                noter_livre(matrice, pseudo)
+
+def afficher_livres():
     """Affiche la liste des livres présents dans le dépôt"""
     print("Affichage livres")
     books=open("books.txt", "r", encoding="utf-8")
@@ -64,49 +97,37 @@ def afficher_lecteur():
     """Affiche un lecteur donné s'il est présent dans nos registre"""
     print("Affichage lecteur")
     nom=input("Entrer le pseudo du lecteur: ")
-
-    utilisateurs=open('readers.txt', 'r', encoding="utf-8")
-    livres_lus=open('booksread.txt', 'r', encoding="utf-8")
-    #Partie informations de l'utilisateur
-    x=0
-    for ligne1 in utilisateurs:
-        liste=ligne1.split(',')
-        if liste[0]==nom:
-            x=1 #Je crée une variable temporaire que je vais utiliser ligne 77
-            #J'ai défini des dico juste en haut, et le numéro trouvé dans le fichier
-            #readers afficher la valeur associée à cette clé
-            print(nom, genre[int(liste[1])], age[int(liste[2])], style[int(liste[3][:-1])]) #[:-1] parce qu'à la fin il y avait \n qui me permettait de sauter une ligne
-            print("Livres lus: ")
-            #Partie livres lus par le lecteur
-            for ligne2 in livres_lus:
-                liste2=ligne2.split(',')
-                if liste2[0]==nom:
-                    liste2[-1]=liste2[-1][:2] #je supprime tout de suite le \n du dernier élément
-                    for i in range(1, len(liste2)):#on part de 1 pour ne pas commencer au 0 qui est le pseudo
-                        with open('books.txt', 'r', encoding="utf-8") as livres:
-                            lignes2=livres.readlines()
-                        print(lignes2[int(liste2[i])])
-
-    if x==1:
-        pass
+    if verif_lecteur(nom):
+        utilisateurs=open('readers.txt', 'r', encoding="utf-8")
+        livres_lus=open('booksread.txt', 'r', encoding="utf-8")
+        #Partie informations de l'utilisateur
+        for ligne1 in utilisateurs:
+            liste=ligne1.split(',')
+            if liste[0]==nom:
+                x=1 #Je crée une variable temporaire que je vais utiliser ligne 77
+                #J'ai défini des dico juste en haut, et le numéro trouvé dans le fichier
+                #readers afficher la valeur associée à cette clé
+                print(nom, genre[int(liste[1])], age[int(liste[2])], style[int(liste[3][:-1])]) #[:-1] parce qu'à la fin il y avait \n qui me permettait de sauter une ligne
+                #Partie livres lus par le lecteur
+                for ligne2 in livres_lus:
+                    liste2=ligne2[:-1].split(',')
+                    if len(liste2)>1:
+                        if liste2[0]==nom:
+                            print("Livres lus: ")
+                            for i in range(1, len(liste2)):#on part de 1 pour ne pas commencer au 0 qui est le pseudo
+                                print(i)
+                                with open('books.txt', 'r', encoding="utf-8") as livres:
+                                    lignes2=livres.readlines()
+                                print(lignes2[int(liste2[i])-1][:-1])
     else:
         print(nom, "n'est pas dans nos registres.")
-            
+
 def modifier_lecteur():
     """Modifier un lecteur existant dans nos registres"""
     print("modification lecteur")
     nom=input("Entrer le pseudo du lecteur que vous voulez modifier: ")
-    utilisateurs=open('readers.txt', 'r', encoding="utf-8")
     #Je vérifie d'abord si l'utilisateur existe dans readers.txt
-    existe=False
-    for ligne in utilisateurs:
-        liste=ligne.split(',')
-        if liste[0]==nom:
-            existe=True
-    utilisateurs.close()
-    if existe==False:
-        print(nom, "n'existe pas dans nos registres")
-    else:
+    if verif_lecteur(nom):
         modifier=int(input("Que voulez vous modifier? \n1-> Ses informations personnelles \n2-> Ses livres lus \n3-> Les deux \nEntrer : "))
         
         if modifier==1 or modifier==3:
@@ -167,7 +188,9 @@ def modifier_lecteur():
             for lignes in livres:
                 livres_lus.write(lignes)
             livres_lus.close()
-                
+    else:
+        print(nom, "n'est pas dans nos registres.")
+
 def supprimer_lecteur():
     """Supprime un utilisateur de nos registres"""
     print("suppression lecteur")
@@ -186,7 +209,7 @@ def supprimer_lecteur():
         if test[0]==nom:
             x=i #Je dois créer une variable temporaire et supprimer hors boucle car sinon cela crée une list index out of range
             trouvé = True
-    if trouvé!=True:
+    if trouvé==False:
         print(nom, "n'est pas dans nos regisres.")
     else:
         del utilisateurs[x]
@@ -209,20 +232,6 @@ def supprimer_lecteur():
         for ligne in livres_lus:
             books.write(ligne)
         books.close()
-
-def verif_livre(livre:str):
-    """Cette fonction vérifie la présence d'un livre
-    Le nom du livre en parametre
-    Renvoi True or False"""
-    books=open("books.txt", 'r', encoding="utf-8")
-    book=books.readlines()
-    books.close()
-    verif=False
-    for ligne in book:
-        if ligne[:len(ligne)-1] == livre:
-            verif=True
-    return verif
-
 
 def ajouter_livre():
     """Ajouter un livre dans nos registres"""
@@ -375,6 +384,24 @@ def noter_livre(matrice:list, pseudo=0)->list:
                 matrice[numero_lecteur][numero_livre]=note
     return matrice
 
+def menu():
+    """Cette fonciton fait un menu qui sera démarré à chaque execution"""
+    print("Bienvenue dans notre système de recommandation de livres")
+    print("Que souhaitez vous effectuer?")
+    action=int(input("1 pour des actions sur les LECTEURS | 2 pour les LIVRES\n Entrer: "))
+    while action not in [1, 2]:
+        action=int(input("Entrer soit 1 soit 2"))
+    if action==1:
+        fonctions_noms={ajouter_lecteur:"Ajouter lecteur", afficher_lecteur:"Afficher lecteur", modifier_lecteur:"Modifier lecteur", supprimer_lecteur:"Supprimer lecteur"}
+        fonctions={1:ajouter_lecteur, 2:afficher_lecteur, 3:modifier_lecteur, 4:supprimer_lecteur}
+        for i in range(1, len(fonctions.values())+1):
+            print("Entrer", i, "pour", fonctions_noms[fonctions[i]])
+        fonctions[int(input(":"))]()
+    if action==2:
+        fonctions_noms={afficher_livres:"Afficher livre", ajouter_livre:"Ajouter livre", modifier_livre:"Modifier livre", supprimer_livre:"Supprimer livre"}
+        fonctions={1:afficher_livres, 2:ajouter_livre, 3:modifier_livre, 4:supprimer_lecteur}
+        for i in range(1, len(fonctions.values())+1):
+            print("Entrer", i, "pour", fonctions_noms[fonctions[i]])
+        fonctions[int(input(":"))]()
 matrice=creation_matrice()
-#print(noter_livre(matrice, 'Ayoub'))
-ajouter_lecteur()
+menu()
